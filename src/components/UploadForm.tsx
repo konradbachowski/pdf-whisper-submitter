@@ -125,10 +125,10 @@ const UploadForm = () => {
   };
 
   return (
-    <section id="form" className="py-16 bg-white">
+    <section id="form" className="py-16 bg-white min-h-screen flex items-center justify-center">
       <div className="container mx-auto px-4">
-        <div className="max-w-xl mx-auto bg-white rounded-lg shadow-lg p-6 md:p-8">
-          <h2 className="text-2xl font-bold text-center mb-6">Wyślij swój dokument</h2>
+        <div className="max-w-xl mx-auto bg-white rounded-lg shadow-lg p-6 md:p-8 border border-gray-200">
+          <h2 className="text-2xl font-bold text-center mb-6 text-black">Załącz umowę bez wrażliwych danych</h2>
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -141,7 +141,7 @@ const UploadForm = () => {
                 value={email}
                 onChange={handleEmailChange}
                 placeholder="twoj@email.com"
-                className={`w-full ${emailError ? 'border-red-500' : ''}`}
+                className={`w-full ${emailError ? 'border-red-500' : 'border-gray-300'} bg-white text-black`}
                 disabled={isSubmitting}
               />
               {emailError && <p className="mt-1 text-sm text-red-600">{emailError}</p>}
@@ -187,10 +187,10 @@ const UploadForm = () => {
             <div className="pt-4">
               <Button 
                 type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2"
+                className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-2"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Przesyłanie...' : 'Wyślij dokument'}
+                {isSubmitting ? 'Przesyłanie...' : 'Sprawdź umowę'}
               </Button>
             </div>
           </form>
