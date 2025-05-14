@@ -9,7 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      form_submissions: {
+        Row: {
+          created_at: string
+          email: string
+          file_path: string
+          id: string
+          ip_address: string
+          webhook_triggered: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          file_path: string
+          id?: string
+          ip_address: string
+          webhook_triggered?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          file_path?: string
+          id?: string
+          ip_address?: string
+          webhook_triggered?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

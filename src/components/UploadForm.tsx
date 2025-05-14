@@ -1,9 +1,12 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { getClientIp } from '@/lib/getClientIp';
+import { checkIfIpSubmitted, saveFormSubmission } from '@/services/formService';
+import { uploadFile } from '@/services/fileService';
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB in bytes
 
@@ -14,8 +17,32 @@ const UploadForm = () => {
   const [emailError, setEmailError] = useState('');
   const [fileError, setFileError] = useState('');
   const [recaptchaVerified, setRecaptchaVerified] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [clientIp, setClientIp] = useState<string>('');
   const recaptchaRef = useRef<ReCAPTCHA>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchClientIp = async () => {
+      const ip = await getClientIp();
+      setClientIp(ip);
+      
+      if (ip !== 'unknown') {
+        const submitted = await checkIfIpSubmitted(ip);
+        setHasSubmitted(submitted);
+        
+        if (submitted) {
+          toast({
+            title: "Uwaga",
+            description: "Formularz został już wysłany z tego adresu IP",
+            variant: "destructive"
+          });
+        }
+      }
+    };
+    
+    fetchClientIp();
+  }, [toast]);
 
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -85,19 +112,47 @@ const UploadForm = () => {
       return;
     }
     
+    // Check if user already submitted
+    if (hasSubmitted) {
+      toast({
+        title: "Uwaga",
+        description: "Formularz został już wysłany z tego adresu IP",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Submit form
     setIsSubmitting(true);
     
-    // Simulate form submission with a delay
     try {
-      // In a real app, you'd submit the file to your server here
-      // const formData = new FormData();
-      // formData.append('file', file);
-      // formData.append('email', email);
-      // await fetch('/api/upload', { method: 'POST', body: formData });
+      // Step 1: Upload file to storage
+      const { path, error: uploadError } = await uploadFile(file, email);
       
-      // Simulate network request
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      if (uploadError) {
+        toast({
+          title: "Wystąpił błąd",
+          description: uploadError,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Step 2: Save submission to database
+      const { success, error: submissionError } = await saveFormSubmission({
+        email,
+        file_path: path,
+        ip_address: clientIp
+      });
+      
+      if (!success) {
+        toast({
+          title: "Wystąpił błąd",
+          description: submissionError || "Nie udało się zapisać zgłoszenia",
+          variant: "destructive"
+        });
+        return;
+      }
       
       // Success
       toast({
@@ -109,11 +164,13 @@ const UploadForm = () => {
       setFile(null);
       setEmail('');
       setRecaptchaVerified(false);
+      setHasSubmitted(true);
       if (recaptchaRef.current) {
         recaptchaRef.current.reset();
       }
       
     } catch (error) {
+      console.error('Form submission error:', error);
       toast({
         title: "Wystąpił błąd",
         description: "Nie udało się przesłać pliku. Spróbuj ponownie później.",
@@ -142,7 +199,7 @@ const UploadForm = () => {
                 onChange={handleEmailChange}
                 placeholder="twoj@email.com"
                 className={`w-full ${emailError ? 'border-red-500' : 'border-gray-300'} bg-white text-black`}
-                disabled={isSubmitting}
+                disabled={isSubmitting || hasSubmitted}
               />
               {emailError && <p className="mt-1 text-sm text-red-600">{emailError}</p>}
             </div>
@@ -154,7 +211,7 @@ const UploadForm = () => {
               <div className="mt-1 flex items-center">
                 <label className={`w-full cursor-pointer bg-white border rounded-md px-4 py-2 text-sm 
                   ${fileError ? 'border-red-500' : 'border-gray-300'} 
-                  hover:bg-gray-50 transition-colors`}>
+                  ${hasSubmitted ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'} transition-colors`}>
                   <span className="text-gray-500">
                     {file ? file.name : 'Wybierz plik PDF...'}
                   </span>
@@ -164,7 +221,7 @@ const UploadForm = () => {
                     onChange={handleFileChange}
                     accept=".pdf"
                     className="hidden"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || hasSubmitted}
                   />
                 </label>
               </div>
@@ -181,6 +238,7 @@ const UploadForm = () => {
                 ref={recaptchaRef}
                 sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"  // This is Google's test key
                 onChange={handleRecaptchaChange}
+                disabled={hasSubmitted}
               />
             </div>
             
@@ -188,10 +246,16 @@ const UploadForm = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-2"
-                disabled={isSubmitting}
+                disabled={isSubmitting || hasSubmitted}
               >
-                {isSubmitting ? 'Przesyłanie...' : 'Sprawdź umowę'}
+                {isSubmitting ? 'Przesyłanie...' : hasSubmitted ? 'Przesłano' : 'Sprawdź umowę'}
               </Button>
+              
+              {hasSubmitted && (
+                <p className="mt-4 text-center text-sm text-gray-500">
+                  Formularz został już wysłany. Dziękujemy!
+                </p>
+              )}
             </div>
           </form>
         </div>
