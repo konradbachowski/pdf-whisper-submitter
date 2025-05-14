@@ -82,6 +82,21 @@ const UploadForm = () => {
   const handleRecaptchaChange = (value: string | null) => {
     setRecaptchaVerified(!!value);
   };
+const verifyRecaptcha = async (token: string): Promise<boolean> => {
+  try {
+    const res = await fetch("https://oegvphxlgtgngmikytua.functions.supabase.co/verify-recaptcha", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+
+    const data = await res.json();
+    return data.success === true;
+  } catch (err) {
+    console.error("Recaptcha verify error", err);
+    return false;
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,15 +117,27 @@ const UploadForm = () => {
       return;
     }
     
-    // Validate recaptcha
-    if (!recaptchaVerified) {
-      toast({
-        title: "Błąd",
-        description: "Potwierdź, że nie jesteś robotem",
-        variant: "destructive"
-      });
-      return;
-    }
+    const recaptchaToken = recaptchaRef.current?.getValue();
+
+if (!recaptchaToken) {
+  toast({
+    title: "Błąd",
+    description: "Potwierdź, że nie jesteś robotem",
+    variant: "destructive"
+  });
+  return;
+}
+
+const verified = await verifyRecaptcha(recaptchaToken);
+
+if (!verified) {
+  toast({
+    title: "Błąd reCAPTCHA",
+    description: "Nie udało się zweryfikować. Spróbuj ponownie.",
+    variant: "destructive"
+  });
+  return;
+}
     
     // Check if user already submitted
     if (hasSubmitted) {
