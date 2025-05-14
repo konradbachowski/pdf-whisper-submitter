@@ -236,7 +236,7 @@ const UploadForm = () => {
             <div className="flex justify-center">
               <ReCAPTCHA
                 ref={recaptchaRef}
-                sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"  // This is Google's test key
+                sitekey="6LdCsDkrAAAAAPnPlNcNzenU2SMhDsg_SZHIMdNd"  // This is Google's test key
                 onChange={handleRecaptchaChange}
                 disabled={hasSubmitted}
               />
