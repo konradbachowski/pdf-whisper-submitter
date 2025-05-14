@@ -263,7 +263,7 @@ if (!verified) {
             <div className="flex justify-center">
               <ReCAPTCHA
                 ref={recaptchaRef}
-                sitekey="6LdCsDkrAAAAAPnPlNcNzenU2SMhDsg_SZHIMdNd"  // This is Google's test key
+                sitekey="6LdaHDorAAAAAB0fIN6BvfrY3amAdvMLMyohaEWA"  // This is Google's test key
                 onChange={handleRecaptchaChange}
                 disabled={hasSubmitted}
               />
