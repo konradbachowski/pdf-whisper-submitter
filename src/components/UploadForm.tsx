@@ -18,6 +18,7 @@ const UploadForm = () => {
   const [file,   setFile]           = useState<File | null>(null);
   const [email,  setEmail]          = useState('');
   const [isSubmitting, setSubmitting] = useState(false);
+         const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   const [emailError,   setEmailError]   = useState('');
   const [fileError,    setFileError]    = useState('');
