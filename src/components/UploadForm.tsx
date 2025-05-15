@@ -34,15 +34,17 @@ const UploadForm = () => {
 
   const verifyRecaptcha = async (token: string): Promise<boolean> => {
     try {
-      const res   = await fetch(SUPABASE_FN_URL, {
-        method : 'POST',
+      const res = await fetch(SUPABASE_FN_URL, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body   : JSON.stringify({ token })
+        body: JSON.stringify({ token })
       });
-      const json  = await res.json();
+      const json = await res.json();
+      setRecaptchaToken(token);
       return json.success === true;
     } catch (err) {
       console.error('Recaptcha verify error:', err);
+      setRecaptchaToken(null);
       return false;
     }
   };
@@ -184,7 +186,13 @@ const UploadForm = () => {
               <ReCAPTCHA
                 ref={recaptchaRef}
                 sitekey={RECAPTCHA_V2_SITE_KEY}
-                onChange={() => {}}
+                onChange={(token: string | null) => {
+                  if (token) {
+                    verifyRecaptcha(token);
+                  } else {
+                    setRecaptchaToken(null);
+                  }
+                }}
                 theme="light"
                 size="normal"
               />
