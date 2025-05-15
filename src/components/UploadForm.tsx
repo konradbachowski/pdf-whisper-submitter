@@ -12,7 +12,11 @@ import { checkIfIpSubmitted,
 import { supabase }             from '@/integrations/supabase/client';
 
 const MAX_FILE_SIZE          = 15 * 1024 * 1024;           // 15 MB
-const RECAPTCHA_V2_SITE_KEY  = '6LdaHDorAAAAAB0fIN6BvfrY3amAdvMLMyohaEWA';          // 
+const RECAPTCHA_V2_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+
+if (!RECAPTCHA_V2_SITE_KEY) {
+  throw new Error('Missing VITE_RECAPTCHA_SITE_KEY environment variable');
+}
 
 const UploadForm = () => {
   const [file,   setFile]           = useState<File | null>(null);

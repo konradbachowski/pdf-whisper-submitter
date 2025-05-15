@@ -2,9 +2,12 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders
+    })
   }
 
   try {
@@ -19,15 +22,17 @@ serve(async (req) => {
       throw new Error('reCAPTCHA secret not configured')
     }
 
-    // Verify the token with Google reCAPTCHA API
     const verifyRes = await fetch(
       'https://www.google.com/recaptcha/api/siteverify',
       {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
         body: new URLSearchParams({
           secret,
-          response: token,
-        }),
+          response: token
+        })
       }
     )
 
@@ -36,16 +41,24 @@ serve(async (req) => {
     return new Response(
       JSON.stringify(verifyData),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     )
   } catch (error) {
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({
+        success: false,
+        error: error.message || 'Internal server error'
+      }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        },
+        status: 400
       }
     )
   }
