@@ -9,16 +9,16 @@ import { getClientIp }           from '@/lib/getClientIp';
 import { uploadFile }            from '@/services/fileService';
 import { checkIfIpSubmitted,
          saveFormSubmission }    from '@/services/formService';
+import { supabase }             from '@/integrations/supabase/client';
 
 const MAX_FILE_SIZE          = 15 * 1024 * 1024;           // 15 MB
-const SUPABASE_FN_URL        = 'https://oegvphxlgtgngmikytua.functions.supabase.co/verify-recaptcha';
 const RECAPTCHA_V2_SITE_KEY  = '6LdaHDorAAAAAB0fIN6BvfrY3amAdvMLMyohaEWA';          // 
 
 const UploadForm = () => {
   const [file,   setFile]           = useState<File | null>(null);
   const [email,  setEmail]          = useState('');
   const [isSubmitting, setSubmitting] = useState(false);
-         const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   const [emailError,   setEmailError]   = useState('');
   const [fileError,    setFileError]    = useState('');
@@ -34,14 +34,14 @@ const UploadForm = () => {
 
   const verifyRecaptcha = async (token: string): Promise<boolean> => {
     try {
-      const res = await fetch(SUPABASE_FN_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token })
+      const { data, error } = await supabase.functions.invoke('verify-recaptcha', {
+        body: { token }
       });
-      const json = await res.json();
+
+      if (error) throw error;
+      
       setRecaptchaToken(token);
-      return json.success === true;
+      return data.success === true;
     } catch (err) {
       console.error('Recaptcha verify error:', err);
       setRecaptchaToken(null);
